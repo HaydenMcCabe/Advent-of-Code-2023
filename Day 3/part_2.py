@@ -53,7 +53,7 @@ for line_number in range(len(data_lines)):
         track_gears(line_number, (search_start, search_end), int_value)
 
 
-sum = 0      
+sum = 0
 for position, values in gears.items():
     if len(values) == 2:
         sum += values[0] * values[1]
