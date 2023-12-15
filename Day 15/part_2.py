@@ -14,11 +14,6 @@ class lens:
         self.label = label
         self.focus = focus
 
-def remove_lens(label: str, arr: [lens]):
-    print(arr)
-    arr = list(filter(lambda e: e.label == label, arr))
-
-
 boxes = [[] for i in range(256)]
 
 input = open("data.txt").read().split(",")
