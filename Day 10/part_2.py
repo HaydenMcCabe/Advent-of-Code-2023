@@ -5,7 +5,6 @@ import functools
 sys.setrecursionlimit(1_000_000)
 
 output_file = open("output.txt", "w")
-
 # A recursive function to find a closed loop ending at "S", and returns an array of the positions
 # in the loop
 def loop_length(position: (int, int), origin: (int, int), map: [str], distance: int) -> [((int, int), int)]:
