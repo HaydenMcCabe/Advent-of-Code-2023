@@ -1,5 +1,4 @@
 blocks = open("data.txt").read().split("\n\n")
-out_file = open("debug.txt", "w")
 
 def string_to_int(s: str) -> int:
     val = 0
@@ -26,6 +25,33 @@ def append_bits(s: str, vals: [int]):
         else:
             vals[i] = vals[i] << 1
 
+def has_v_symmetry(v_ints: [int], start_col: int, end_col: int) -> bool:
+    left = ((end_col - start_col) >> 1) + start_col
+    right = left + 1
+    bitmask = 0
+    while right <= end_col:
+        bitmask ^= v_ints[left]
+        bitmask ^= v_ints[right]
+        if bitmask > 0 and single_bit_pos(bitmask) is None:
+            return False
+        left -= 1
+        right += 1
+    return True
+
+def has_h_symmetry(lines: [str], start_row: int, end_row: int) -> bool:
+    top = ((end_row - start_row) >> 1) + start_row
+    bottom = top + 1
+    bitmask = 0
+    
+    while bottom <= end_row:
+        bitmask ^= string_to_int(lines[top])
+        bitmask ^= string_to_int(lines[bottom])
+        if bitmask > 0 and single_bit_pos(bitmask) is None:
+            return False
+        top -= 1
+        bottom += 1
+    return True
+
 sum = 0
 for block in blocks:
     lines = block.splitlines()
@@ -42,11 +68,11 @@ for block in blocks:
     for line_index in range(1, len(lines)):
         sym_mask ^= string_to_int(lines[line_index])
         if (pos := single_bit_pos(sym_mask)) is not None:
-            rows_above = (line_index >> 1) + 1
-            out_file.write("Found symmetry below %d\n\n" % rows_above)
-            sum += 100 * rows_above
-            inner_break = True
-            break
+            if has_h_symmetry(lines, 0, line_index):
+                rows_above = (line_index >> 1) + 1
+                sum += 100 * rows_above
+                inner_break = True
+                break
         append_bits(lines[line_index], v_ints)
     if inner_break:
         continue
@@ -56,12 +82,12 @@ for block in blocks:
     for line_index in reversed(range(len(lines) - 1)):
         sym_mask ^= string_to_int(lines[line_index])
         if (pos := single_bit_pos(sym_mask)) is not None:
-            rows_below = ((len(lines) - line_index) >> 1)
-            rows_above = len(lines) - rows_below
-            out_file.write("BTT symmetry below %d\n\n" % rows_above)
-            sum += 100 * rows_above
-            inner_break = True
-            break
+            if has_h_symmetry(lines, line_index, len(lines) - 1):
+                rows_below = ((len(lines) - line_index) >> 1)
+                rows_above = len(lines) - rows_below
+                sum += 100 * rows_above
+                inner_break = True
+                break
     if inner_break:
         continue
 
@@ -70,17 +96,12 @@ for block in blocks:
     for col_index in range(1, len(v_ints)):
         sym_mask ^= v_ints[col_index]
         if (pos := single_bit_pos(sym_mask)) is not None:
-            out_file.write("sym_mask: %d\n" % sym_mask)
-            rows_to_left = (col_index >> 1) + 1
-            out_file.write("Found LTR vertical symmetry right of %d\n\n" % rows_to_left)
-            out_file.write("col_index: %d\n" % col_index)
-            out_file.write("%s\n" % v_ints)
-            header = ("-" * (rows_to_left - 1)) + "vv"
-            out_file.write(header)
-            out_file.write("\n%s\n\n" % block)
-            sum += rows_to_left
-            inner_break = True
-            break
+            if has_v_symmetry(v_ints, 0, col_index):
+                rows_to_left = (col_index >> 1) + 1
+                header = ("-" * (rows_to_left - 1)) + "vv"
+                sum += rows_to_left
+                inner_break = True
+                break
     if inner_break:
         continue    
 
@@ -91,17 +112,13 @@ for block in blocks:
         if (pos := single_bit_pos(sym_mask)) is not None:
             rows_to_right = ((len(v_ints) - col_index) >> 1)
             rows_to_left = (len(v_ints) - rows_to_right)
-            out_file.write("Found RTL vertical symmetry right of %d\n\n" % rows_to_left)
-            header = ("-" * (rows_to_left - 1)) + "vv"
-            out_file.write(header)
-            out_file.write("\n%s\n\n" % block)
-            sum += rows_to_left
-            inner_break = True
-            break
+            if has_v_symmetry(v_ints, col_index, len(v_ints) - 1):
+                header = ("-" * (rows_to_left - 1)) + "vv"
+                sum += rows_to_left
+                inner_break = True
+                break
     if inner_break:
         continue
 
-    print("No path to victory :(")
 
-out_file.close()
 print("Sum: %d" % sum)
